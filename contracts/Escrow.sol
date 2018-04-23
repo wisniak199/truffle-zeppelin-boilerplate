@@ -44,7 +44,8 @@ contract SafeEscrow is Ownable {
     }
 
     function cancel() public onlyOwner inState(State.CREATED) {
-        selfdestruct(msg.sender);
+        state = State.RESOLVED;
+        selfdestruct(owner);
     }
 
     function confirmPurchase() payable public inState(State.CREATED) {
