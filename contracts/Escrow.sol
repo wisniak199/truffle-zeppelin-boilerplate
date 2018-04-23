@@ -2,8 +2,7 @@ pragma solidity ^0.4.21;
 import "zeppelin-solidity/contracts/math/SafeMath.sol";
 import "zeppelin-solidity/contracts/ownership/Ownable.sol";
 
-contract Escrow is Ownable {
-    uint256 public price;
+contract SafeEscrow is Ownable {
 
     enum State {
         CREATED,
@@ -12,20 +11,26 @@ contract Escrow is Ownable {
     }
 
     State public state;
-    uint256 public amount;
+    uint256 public price;
     address public buyer;
 
-    event ConfirmedPurchase(address indexed buyer);
-    event ConfirmedReceived(address indexed buyer);
+    event EscrowCreated(address indexed seller);
+    event EscrowConfirmedPurchase(address indexed buyer);
+    event EscrowConfirmedReceived(address indexed buyer);
 
 
-    function Escrow() public payable Ownable() {
+    function SafeEscrow(uint256 _price) public payable Ownable() {
         require(msg.value > 0);
-        // We don't check if the amount is even, because checking it
-        // is more expensive than 1 wei that could be lost, and it is never
-        // lost because we always destroy smart contract at the end.
-        amount = msg.value / 2;
+        // In theory we could not check if the amount is even,
+        // because checking it is more expensive than 1 wei that could be lost
+        // (and it actually never lost because we always destroy smart contract
+        // at the end) but if the seller creates contract sending odd price,
+        // they probably have made a mistake.
+        require(_price * 2 == msg.value);
+
+        price = _price;
         state = State.CREATED;
+        emit EscrowCreated(owner);
     }
 
     modifier inState(State _state) {
@@ -43,10 +48,10 @@ contract Escrow is Ownable {
     }
 
     function confirmPurchase() payable public inState(State.CREATED) {
-        require(msg.value == amount * 2);
+        require(msg.value == price * 2);
         state = State.IN_PROGRESS;
         buyer = msg.sender;
-        emit EscrowConfirmed(msg.sender);
+        emit EscrowConfirmedPurchase(msg.sender);
     }
 
     function confirmReceived() public onlyBuyer inState(State.IN_PROGRESS) {
@@ -54,10 +59,17 @@ contract Escrow is Ownable {
         // We could use withdraw technique here, but it doesn't make sense
         // for the buyer to provide such function, because they can acheive
         // the same result by not confirming.
-        buyer.transfer(amount);
+        buyer.transfer(price);
         // Forward rest of the money.
         selfdestruct(owner);
 
-        emit ConfirmedReceived(msg.sender);
+        emit EscrowConfirmedReceived(msg.sender);
+    }
+}
+
+// DEPRECATED: please use SafeEscrow instead as it is harder to create your
+// escrow with wrong amount
+contract Escrow is SafeEscrow {
+    function Escrow() public payable SafeEscrow(msg.value / 2) {
     }
 }
