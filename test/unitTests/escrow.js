@@ -44,7 +44,7 @@ describe('Escrow', () => {
     expect(address).to.not.be.null;
   });
 
-  describe('Escrow', async() => {
+  xdescribe('Escrow', async() => {
     it('should be properly created', async () => {
       const actualPrice = await contract.methods.price().call();
       expect(actualPrice).to.eq.BN(price);
@@ -107,7 +107,7 @@ describe('Escrow', () => {
 
   });
 
-  describe('checking funds', async() => {
+  xdescribe('checking funds', async() => {
     let sellerBalanceBefore;
     let buyerBalanceBefore;
     let sellerBalanceAfter;
