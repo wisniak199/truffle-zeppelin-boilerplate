@@ -34,14 +34,11 @@ describe('Splitter', () => {
   let accounts;
 
 
-
   const tokensCap = new BN('100').mul(new BN('10').pow(new BN('18')));
   const someAmount = new BN('1').mul(new BN('10').pow(new BN('18')));
   const finney = new BN('1').mul(new BN('10').pow(new BN('15')));
 
-
   const balanceOf = async (client) => new BN(await web3.eth.getBalance(client));
-
 
   before(async () => {
     accounts = await web3.eth.getAccounts();
@@ -83,17 +80,13 @@ describe('Splitter', () => {
     });
 
     it('should be split', async () => {
-      console.log(tokenAddr);
-      console.log(splitter.options.address);
-      console.log(tokenOwner);
-      console.log(someAmount);
-      //await tokenContract.methods.transferFrom(tokenOwner, tokenContract.options.address, someAmount).send({ from: tokenContract.options.address });
-      const allowance = await tokenContract.methods.allowance(tokenOwner, splitter.options.address).call();
-      console.log(allowance.toString());
-      console.log(someAmount.toString());
-      await splitter.methods.split(tokenAddr, someAmount).send({from: tokenOwner, value: finney});
-      require(tokenAddress.balanceOf(address(this)) > 0);
 
+      await splitter.methods.split(tokenAddr, someAmount).send({from: tokenOwner, value: finney});
+
+      let b1 = await tokenContract.methods.balanceOf(addr1).call();
+      expect(b1).to.be.eq.BN(someAmount.div(new BN("2")));
+      let b2 = await tokenContract.methods.balanceOf(addr1).call();
+      expect(b2).to.be.eq.BN(someAmount.div(new BN("2")));
     });
   
 

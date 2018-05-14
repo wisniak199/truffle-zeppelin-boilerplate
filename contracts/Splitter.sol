@@ -34,18 +34,24 @@ contract Splitter {
 
     function split(ERC20 tokenAddress, uint tokenAmount) public payable feeSend {
         emit TokensSplitted(tokenAddress, msg.sender, tokenAmount);
-        require(tokenAddress.transferFrom(msg.sender, address(this), tokenAmount));
 
         uint256 splittedAmount = tokenAmount.div(beneficiaries.length);
-        uint256 remainderAmount = tokenAmount.sub(splittedAmount);
+        uint256 amountToSend = splittedAmount.mul(beneficiaries.length);
 
-        /*require(tokenAddress.transfer(beneficiaries[0],
-            splittedAmount.add(remainderAmount)));
+        require(tokenAddress.transferFrom(msg.sender, address(this), amountToSend));
 
-        // Split rest.
-        for (uint i = 1; i < beneficiaries.length; i++) {
+        splitTransfered(tokenAddress);
+    }
+
+    function splitTransfered(ERC20 tokenAddress) public payable feeSend {
+        emit TokensSplitted(tokenAddress, msg.sender, tokenAmount);
+        uint256 tokenAmount = tokenAddress.balanceOf(address(this));
+
+        uint256 splittedAmount = tokenAmount.div(beneficiaries.length);
+        for (uint i = 0; i < beneficiaries.length; i++) {
+            // This could be approve, but it would make it dificult to find out what tokens got splitted.
             require(tokenAddress.transfer(beneficiaries[i], splittedAmount));
-        }*/
+        }
     }
 
     modifier onlyFeeCollector() {
@@ -61,5 +67,5 @@ contract Splitter {
         emit FeeCollected(feeCollector, amount);
         feeCollector.transfer(amount);
     }
-
 }
+
