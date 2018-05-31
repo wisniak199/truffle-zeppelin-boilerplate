@@ -69,4 +69,17 @@ describe('MerkleGame', async() => {
     await contract.methods.provideProof(proof.proofHashes, proof.isLeftChild).send({from: player2});
     await expectThrow(contract.methods.withdraw().send({from: player2}));
   });
+
+  it("player 1 wants withdraw erlier", async function () {
+    let tree = new MerkleTree([1, 2, 3, 4, 5, 6], number_hasher, byte_hasher);
+    await contract.methods.bet().send({from: player1, value: web3.utils.toWei("2", "ether")});
+    await contract.methods.provideMerkleTree(tree.getRootHash()).send({from: player2});
+    await contract.methods.provideNumber(100).send({from: player1});
+    await expectThrow(contract.methods.withdraw().send({from: player1}));
+  });
+
+  it("wrong amount of ether", async function () {
+    await expectThrow(contract.methods.bet().send({from: player1, value: web3.utils.toWei("3", "ether")}));
+  });
+
 });
